@@ -1,0 +1,48 @@
+:source-highlighter: coderay
+
+= Perceptual Intensity
+
+The world is a big place. The amount of light on a sunny day is about 100,000 times the amount on
+a moonlit night, but humans can see effectively in both. The range of (safe!) hearing is even
+greater.
+
+Animals perceive sensory intensity link:https://en.wikipedia.org/wiki/Weber%E2%80%93Fechner_law[on
+a generally logarithmic basis]. When controlling sensory outputs, such as the PWM level for an LED,
+simply outputting a raw value leads to a perception that the output turns up very quickly but then
+levels off for the later part of its range. Instead, to provide an effect of smooth variation, you
+can scale the absolute value to a perceptual mapping.
+
+This library includes basic lookup tables for mapping raw values to perceived values and back.
+The tables are generally log/anti-log tables with some minor tweaks to ensure that, for example,
+a nonzero raw value always produces at least an output of 1. Note that because of rounding, 
+a round-trip conversion is likely to produce a slightly different value from the input.
+
+The tables here cover unsigned 8-bit values, as those are most common in embedded development, and
+256-byte tables are reasonably compact.
+
+== Example usage
+
+.Smooth brightness scaling for an LED
+[source,cpp]
+----
+#include "perceptual-intensity/perceptual.h"
+
+void loop() {
+  for(uint8_t apparent_brightness = 0; apparent_brightness < 256; apparent_brightness++) {
+    uint8_t pwm = PERCEPTUAL_TO_ABSOLUTE[apparent_brightness];
+    setBrightness(pwm);
+  }
+}
+----
+
+.Determining apparent loudness of a sound
+[source,cpp]
+----
+#include "perceptual-intensity/perceptual.h"
+
+void loop() {
+  uint8_t loudness = microphone.getIntensity();
+  uint8_t volume = ABSOLUTE_TO_PERCEPTUAL[loudness];
+  printf("apparent volume is %d\n", volume);
+}
+----
